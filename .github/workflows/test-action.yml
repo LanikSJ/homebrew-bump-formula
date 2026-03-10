@@ -16,6 +16,28 @@ env:
   TAP_URL: ${{ github.server_url }}/${{ github.repository }}
 
 jobs:
+  # Validate that required secrets are available
+  validate-secrets:
+    name: Validate Secrets
+    runs-on: ubuntu-latest
+    outputs:
+      token-valid: ${{ steps.validate.outputs.token-valid }}
+    steps:
+      - name: Validate HOMEBREW_TOKEN secret
+        id: validate
+        run: |
+          if [ -z "${{ secrets.HOMEBREW_TOKEN }}" ]; then
+            echo "❌ HOMEBREW_TOKEN secret is not set in repository settings"
+            echo "Please add the HOMEBREW_TOKEN secret to your repository:"
+            echo "1. Go to repository Settings > Secrets and variables > Actions"
+            echo "2. Click 'New repository secret'"
+            echo "3. Add 'HOMEBREW_TOKEN' with your GitHub Personal Access Token"
+            exit 1
+          else
+            echo "✅ HOMEBREW_TOKEN secret is available"
+            echo "token-valid=true" >> $GITHUB_OUTPUT
+          fi
+
   # Test individual formula updates with specific tags/versions
   test-formula-updates:
     name: Test Formula Updates
