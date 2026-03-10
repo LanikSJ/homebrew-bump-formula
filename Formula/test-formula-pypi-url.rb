@@ -41,7 +41,7 @@ class TestFormulaPypiUrl < Formula
   end
 
   def install
-    (buildpath/"test").write <<~EOS
+    (buildpath / "test").write <<~EOS
       test
     EOS
 
