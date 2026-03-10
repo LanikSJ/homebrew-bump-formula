@@ -6,7 +6,9 @@ Works on Ubuntu and macOS runners.
 
 ## Usage
 
-One should use the [Personal Access Token](https://github.com/settings/tokens/new?scopes=public_repo,workflow) for `token` input to this Action, not the default `GITHUB_TOKEN`, because `brew bump-formula-pr` creates a fork of the formula's tap repository (if needed) and then creates a pull request.
+One should use the [Personal Access Token](https://github.com/settings/tokens/new?scopes=public_repo,workflow) for
+`token` input to this Action, not the default `GITHUB_TOKEN`, because `brew bump-formula-pr` creates a fork of the
+formula's tap repository (if needed) and then creates a pull request.
 
 > There are two ways to use this Action.
 
@@ -57,7 +59,9 @@ The Action will extract all needed informations by itself, you just need to spec
 
 ### Livecheck mode
 
-If `livecheck` input is set to `true`, the Action will run `brew livecheck` to check if any provided formulae are outdated or if tap contains any outdated formulae and then will run `brew bump-formula-pr` on each of those formulae with proper arguments to bump them.
+If `livecheck` input is set to `true`, the Action will run `brew livecheck` to check if any provided formulae are
+outdated or if tap contains any outdated formulae and then will run `brew bump-formula-pr` on each of those formulae
+with proper arguments to bump them.
 
 Might be a good idea to run this on schedule in your tap repo, so one gets automated PRs updating outdated formulae.
 
@@ -89,15 +93,15 @@ If only `tap` input is provided, all formulae in given tap will be checked and b
 
 ## Examples
 
-- https://github.com/LanikSJ/action-homebrew-bump-formula/blob/master/.github/workflows/test.yml
-- https://github.com/LanikSJ/ba-bump/blob/master/.github/workflows/bump.yml
-- https://github.com/ablinov/declutter/blob/master/.github/workflows/bump_homebrew_formula.yml
-- https://github.com/jesseduffield/lazygit/blob/master/.github/workflows/cd.yml
-- https://github.com/stephan-hesselmann-by/homebrew-BlueYonder/blob/master/.github/workflows/update-tap.yml
-- https://github.com/crunchtime-ali/brew-formula-updater/blob/master/.github/workflows/main.yml
-- https://github.com/asciidoc/asciidoc-py3/blob/master/.github/workflows/release.yml
-- https://github.com/bow-swift/nef/blob/master/.github/workflows/bump-formula.yml
-- https://github.com/dandavison/delta/blob/master/.github/workflows/cd.yml
-- https://github.com/GitTools/GitVersion/blob/main/.github/workflows/homebrew.yml
-- https://github.com/wormi4ok/evernote2md/blob/master/.github/workflows/publish.yml
-- https://github.com/cloudskiff/driftctl/blob/main/.github/workflows/homebrew.yml
+- <https://github.com/LanikSJ/action-homebrew-bump-formula/blob/master/.github/workflows/test.yml>
+- <https://github.com/LanikSJ/ba-bump/blob/master/.github/workflows/bump.yml>
+- <https://github.com/ablinov/declutter/blob/master/.github/workflows/bump_homebrew_formula.yml>
+- <https://github.com/jesseduffield/lazygit/blob/master/.github/workflows/cd.yml>
+- <https://github.com/stephan-hesselmann-by/homebrew-BlueYonder/blob/master/.github/workflows/update-tap.yml>
+- <https://github.com/crunchtime-ali/brew-formula-updater/blob/master/.github/workflows/main.yml>
+- <https://github.com/asciidoc/asciidoc-py3/blob/master/.github/workflows/release.yml>
+- <https://github.com/bow-swift/nef/blob/master/.github/workflows/bump-formula.yml>
+- <https://github.com/dandavison/delta/blob/master/.github/workflows/cd.yml>
+- <https://github.com/GitTools/GitVersion/blob/main/.github/workflows/homebrew.yml>
+- <https://github.com/wormi4ok/evernote2md/blob/master/.github/workflows/publish.yml>
+- <https://github.com/cloudskiff/driftctl/blob/main/.github/workflows/homebrew.yml>
