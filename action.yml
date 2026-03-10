@@ -33,8 +33,8 @@ inputs:
       In livecheck mode, if formula input is empty,
       the Action will check the whole tap.
 
-      Example: dawidd6/tap
-      Example: dawidd6/homebrew-tap
+      Example: LanikSJ/tap
+      Example: LanikSJ/homebrew-tap
     required: false
   tap_url:
     description: |

@@ -31,7 +31,7 @@ The Action will extract all needed informations by itself, you just need to spec
 
 ```yaml
 - name: Update Homebrew formula
-  uses: dawidd6/action-homebrew-bump-formula@<REF>
+  uses: LanikSJ/action-homebrew-bump-formula@<REF>
   with:
     # Required, custom GitHub access token with the 'public_repo' and 'workflow' scopes
     token: ${{secrets.TOKEN}}
@@ -65,7 +65,7 @@ If there are no outdated formulae, the Action will just exit.
 
 ```yaml
 - name: Update Homebrew formula
-  uses: dawidd6/action-homebrew-bump-formula@<REF>
+  uses: LanikSJ/action-homebrew-bump-formula@<REF>
   with:
     # Required, custom personal GitHub access token with only the 'public_repo' scope enabled
     token: ${{secrets.CUSTOM_PERSONAL_ACCESS_TOKEN}}
@@ -89,8 +89,8 @@ If only `tap` input is provided, all formulae in given tap will be checked and b
 
 ## Examples
 
-- https://github.com/dawidd6/action-homebrew-bump-formula/blob/master/.github/workflows/test.yml
-- https://github.com/dawidd6/ba-bump/blob/master/.github/workflows/bump.yml
+- https://github.com/LanikSJ/action-homebrew-bump-formula/blob/master/.github/workflows/test.yml
+- https://github.com/LanikSJ/ba-bump/blob/master/.github/workflows/bump.yml
 - https://github.com/ablinov/declutter/blob/master/.github/workflows/bump_homebrew_formula.yml
 - https://github.com/jesseduffield/lazygit/blob/master/.github/workflows/cd.yml
 - https://github.com/stephan-hesselmann-by/homebrew-BlueYonder/blob/master/.github/workflows/update-tap.yml
