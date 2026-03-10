@@ -30,7 +30,7 @@ jobs:
       - name: Test
         uses: ./
         with:
-          token: ${{secrets.TOKEN}}
+          token: ${{secrets.HOMEBREW_TOKEN}}
           tap: ${{github.repository}}
           tap_url: ${{github.server_url}}/${{github.repository}}
           formula: ${{matrix.formula}}
@@ -51,7 +51,7 @@ jobs:
       - name: Test
         uses: ./
         with:
-          token: ${{secrets.TOKEN}}
+          token: ${{secrets.HOMEBREW_TOKEN}}
           message: test
           formula: |
             test-formula-url
@@ -75,7 +75,7 @@ jobs:
       - name: Test
         uses: ./
         with:
-          token: ${{secrets.TOKEN}}
+          token: ${{secrets.HOMEBREW_TOKEN}}
           message: |
             First line
             SECOND LINE
