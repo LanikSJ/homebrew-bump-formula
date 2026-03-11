@@ -1,9 +1,12 @@
 name: Test Action
 
 on:
-  pull_request:
-    branches:
-      - main
+#   push:
+#     branches: [ main ]
+#     paths: [ 'action.yml', 'main.rb' ]
+#   pull_request:
+#     branches: [ main ]
+#     paths: [ 'action.yml', 'main.rb' ]
   workflow_dispatch:
 
 concurrency:
@@ -22,7 +25,7 @@ jobs:
     outputs:
       token-valid: ${{ steps.validate.outputs.token-valid }}
     steps:
-      - name: Validate HOMEBREW_TOKEN secret
+      - name: Validate HOMEBREW_TOKEN Secret
         id: validate
         run: |
           if [ -z "${{ secrets.HOMEBREW_TOKEN }}" ]; then
@@ -48,10 +51,10 @@ jobs:
           - { formula: "test-formula-pypi-url", tag: "v2.42.0" }
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Test formula bump
+      - name: Test Formula Bump
         uses: ./
         with:
           token: ${{ secrets.HOMEBREW_TOKEN }}
@@ -68,13 +71,13 @@ jobs:
     runs-on: macos-latest
     needs: test-formula-updates
     steps:
-      - name: Wait for previous job
+      - name: Wait for Previous Job
         run: sleep 30
 
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Test livecheck for multiple formulas
+      - name: Test Livecheck for Multiple Formulas
         uses: ./
         with:
           token: ${{ secrets.HOMEBREW_TOKEN }}
@@ -94,13 +97,13 @@ jobs:
     runs-on: ubuntu-latest
     needs: test-livecheck-formulas
     steps:
-      - name: Wait for previous job
+      - name: Wait for Previous Job
         run: sleep 30
 
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Test livecheck for entire tap
+      - name: Test Livecheck for Entire Tap
         uses: ./
         with:
           token: ${{ secrets.HOMEBREW_TOKEN }}
