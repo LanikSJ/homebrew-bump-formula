@@ -1,4 +1,4 @@
-# Homebrew bump formula GitHub Action
+# 🍻 Homebrew bump formula GitHub Action
 
 An action that wraps `brew bump-formula-pr` to ease the process of updating the formula on new project releases.
 
