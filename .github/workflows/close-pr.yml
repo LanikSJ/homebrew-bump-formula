@@ -19,4 +19,6 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Delete
-        run: git push origin --delete ${{github.event.pull_request.head.ref}}
+        env:
+          BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
+        run: git push origin --delete "$BRANCH_NAME"
