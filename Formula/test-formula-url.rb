@@ -1,12 +1,12 @@
 class TestFormulaUrl < Formula
   desc "Formula to test Action"
-  homepage "https://github.com/dawidd6/actions-updater"
-  url "https://github.com/dawidd6/actions-updater/archive/v0.1.11.tar.gz"
-  sha256 "b1c83ee9d19289eb403ad0863c235fa9c3b3a980c9b13a43cda9fc9413935df4"
+  homepage "https://github.com/dawidd6/action-homebrew-bump-formula"
+  url "https://github.com/dawidd6/action-homebrew-bump-formula/archive/v7.tar.gz"
+  sha256 "38a90d077e56bb5f2192ac079a1c3eec820c431011411a165777ce201e5905b5"
   license "MIT"
 
   def install
-    (buildpath/"test").write <<~EOS
+    (buildpath / "test").write <<~EOS
       test
     EOS
 

@@ -3,8 +3,8 @@ class TestFormulaPypiUrl < Formula
 
   desc "Formula to test Action"
   homepage "https://commitizen-tools.github.io/commitizen/"
-  url "https://files.pythonhosted.org/packages/a1/14/3ad1772b81f1e2f7c91ac99987c0ac72a50ebe2a06967cf9a3eea81dd0d0/commitizen-2.14.0.tar.gz"
-  sha256 "afc68d9d61c8338beeb6145a8276e97a342a16f4f721c8ff654403043240cec0"
+  url "https://files.pythonhosted.org/packages/a6/44/10f95e8178ab5a584298726a4a94ceb83a7f77e00741fec4680df05fedd5/commitizen-4.13.9.tar.gz"
+  sha256 "2b4567ed50555e10920e5bd804a6a4e2c42ec70bb74f14a83f2680fe9eaf9727"
   license "MIT"
   head "https://github.com/commitizen-tools/commitizen.git"
 
@@ -41,7 +41,7 @@ class TestFormulaPypiUrl < Formula
   end
 
   def install
-    (buildpath/"test").write <<~EOS
+    (buildpath / "test").write <<~EOS
       test
     EOS
 
