@@ -30,7 +30,7 @@ jobs:
               tag: "v0.8.3",
               revision: "ecea0ce570d18808399ee16515e30a955707eaa8",
             }
-          - { formula: "test-formula-pypi-url", tag: "v4.13.9" }
+          - { formula: "test-formula-pypi-url", tag: "v1.94" }
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
