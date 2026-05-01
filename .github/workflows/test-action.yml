@@ -1,12 +1,8 @@
 name: Test Action
 
 on:
-  #   push:
-  #     branches: [ main ]
-  #     paths: [ 'action.yml', 'main.rb' ]
-  #   pull_request:
-  #     branches: [ main ]
-  #     paths: [ 'action.yml', 'main.rb' ]
+  pull_request:
+    branches: [ main ]
   workflow_dispatch:
 
 concurrency:
@@ -34,7 +30,7 @@ jobs:
               tag: "v0.8.3",
               revision: "ecea0ce570d18808399ee16515e30a955707eaa8",
             }
-          - { formula: "test-formula-pypi-url", tag: "4.13.10" }
+          - { formula: "test-formula-pypi-url", tag: "4.13.9" }
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
