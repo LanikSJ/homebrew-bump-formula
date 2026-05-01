@@ -97,9 +97,21 @@ module Homebrew
 
   if tap.blank?
     brew "tap", "homebrew/core", "--force"
-  else
+  elsif !tap.blank?
     # Tap the requested tap if applicable
     brew "tap", tap, *(tap_url unless tap_url.blank?)
+
+    # Copy local Formula directory to tap to ensure local changes are used
+    begin
+      tap_info = JSON.parse(read_brew("tap-info", "--json", tap)).first
+      tap_path = Pathname.new(tap_info["path"])
+      if Dir.exist?("Formula") && tap_path.exist?
+        ohai "Synchronizing local Formula directory to tap path: #{tap_path}"
+        FileUtils.cp_r(Dir.glob("Formula/*.rb"), tap_path / "Formula")
+      end
+    rescue => e
+      opoo "Could not synchronize local Formula directory: #{e.message}"
+    end
   end
 
   # Append additional PR message
@@ -129,6 +141,15 @@ module Homebrew
     version = Version.parse tag
 
     # Finally bump the formula
+    if !no_fork.false? && !force.false?
+      branch = "bump-#{formula.split("/").last.delete_suffix(".rb")}-#{tag}"
+      begin
+        git "push", "origin", "--delete", branch
+      rescue
+        nil
+      end
+    end
+
     brew "bump-formula-pr",
       "--no-audit",
       "--no-browse",
@@ -144,7 +165,7 @@ module Homebrew
     # Support multiple formulae in input and change to full names if tap
     unless formula.blank?
       formula = formula.split(/[ ,\n]/).reject(&:blank?)
-      formula = formula.map { |f| tap + "/" + f } unless tap.blank?
+      formula = formula.map { |f| tap.blank? ? f : "#{tap}/#{f}" }
     end
 
     # Get livecheck info
@@ -172,6 +193,15 @@ module Homebrew
 
       begin
         # Finally bump the formula
+        if !no_fork.false? && !force.false?
+          branch = "bump-#{formula.split("/").last.delete_suffix(".rb")}-#{version}"
+          begin
+            git "push", "origin", "--delete", branch
+          rescue
+            nil
+          end
+        end
+
         brew "bump-formula-pr",
           "--no-audit",
           "--no-browse",

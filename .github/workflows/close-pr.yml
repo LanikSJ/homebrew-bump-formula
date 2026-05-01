@@ -6,6 +6,7 @@ on:
       - opened
     paths:
       - "Formula/*.rb"
+  workflow_dispatch:
 
 concurrency:
   group: close-pr
