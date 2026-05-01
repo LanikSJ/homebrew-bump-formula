@@ -64,6 +64,8 @@ jobs:
         uses: ./
         with:
           token: ${{ secrets.HOMEBREW_TOKEN }}
+          user_name: ${{ github.actor }}
+          user_email: ${{ github.actor }}@users.noreply.github.com
           tap: ${{ env.TAP }}
           tap_url: ${{ env.TAP_URL }}
           formula: ${{ matrix.test.formula }}
@@ -89,6 +91,8 @@ jobs:
         uses: ./
         with:
           token: ${{ secrets.HOMEBREW_TOKEN }}
+          user_name: ${{ github.actor }}
+          user_email: ${{ github.actor }}@users.noreply.github.com
           message: test
           formula: |
             test-formula-url
@@ -117,6 +121,8 @@ jobs:
         uses: ./
         with:
           token: ${{ secrets.HOMEBREW_TOKEN }}
+          user_name: ${{ github.actor }}
+          user_email: ${{ github.actor }}@users.noreply.github.com
           message: |
             First line
             SECOND LINE
