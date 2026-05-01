@@ -97,13 +97,21 @@ module Homebrew
 
   if tap.blank?
     brew "tap", "homebrew/core", "--force"
-  elsif tap.casecmp?(ENV["GITHUB_REPOSITORY"])
+  elsif !tap.blank?
     # Tap the requested tap if applicable
-    # If we are in the tap repository, tap the local directory to use local changes
-    ohai "Linking local repository as tap: #{tap}"
-    brew "tap", tap, Dir.pwd
-  else
     brew "tap", tap, *(tap_url unless tap_url.blank?)
+
+    # Copy local Formula directory to tap to ensure local changes are used
+    begin
+      tap_info = JSON.parse(read_brew("tap-info", "--json", tap)).first
+      tap_path = Pathname.new(tap_info["path"])
+      if Dir.exist?("Formula") && tap_path.exist?
+        ohai "Synchronizing local Formula directory to tap path: #{tap_path}"
+        FileUtils.cp_r(Dir.glob("Formula/*.rb"), tap_path / "Formula")
+      end
+    rescue => e
+      opoo "Could not synchronize local Formula directory: #{e.message}"
+    end
   end
 
   # Append additional PR message
