@@ -151,7 +151,14 @@ module Homebrew
     # Support multiple formulae in input and change to full names if tap
     unless formula.blank?
       formula = formula.split(/[ ,\n]/).reject(&:blank?)
-      formula = formula.map { |f| tap + "/" + f } unless tap.blank?
+      formula = formula.map do |f|
+        f_path = Pathname.new("#{Dir.pwd}/Formula/#{f}.rb")
+        if f_path.exist?
+          f_path.to_s
+        else
+          (tap.blank? ? f : "#{tap}/#{f}")
+        end
+      end
     end
 
     # Get livecheck info
