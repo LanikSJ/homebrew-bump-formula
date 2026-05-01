@@ -1,12 +1,12 @@
 name: Test Action
 
 on:
-#   push:
-#     branches: [ main ]
-#     paths: [ 'action.yml', 'main.rb' ]
-#   pull_request:
-#     branches: [ main ]
-#     paths: [ 'action.yml', 'main.rb' ]
+  #   push:
+  #     branches: [ main ]
+  #     paths: [ 'action.yml', 'main.rb' ]
+  #   pull_request:
+  #     branches: [ main ]
+  #     paths: [ 'action.yml', 'main.rb' ]
   workflow_dispatch:
 
 concurrency:
@@ -47,9 +47,15 @@ jobs:
       matrix:
         test:
           - { formula: "test-formula-url", tag: "v0.1.12" }
-          - { formula: "test-formula-git-revision", tag: "v0.3.3", revision: "c43abd765cf51c06bbcaa5479dc49aab1396989f" }
+          - {
+              formula: "test-formula-git-revision",
+              tag: "v0.3.3",
+              revision: "c43abd765cf51c06bbcaa5479dc49aab1396989f",
+            }
           - { formula: "test-formula-pypi-url", tag: "v2.42.0" }
     runs-on: ubuntu-latest
+    needs: validate-secrets
+    if: needs.validate-secrets.outputs.token-valid == 'true'
     steps:
       - name: Checkout Repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -63,13 +69,15 @@ jobs:
           formula: ${{ matrix.test.formula }}
           tag: ${{ matrix.test.tag }}
           revision: ${{ matrix.test.revision }}
+          no_fork: true
           force: true
 
   # Test livecheck functionality for individual formulas
   test-livecheck-formulas:
     name: Test Livecheck (Formulas)
     runs-on: macos-latest
-    needs: test-formula-updates
+    needs: [ validate-secrets, test-formula-updates ]
+    if: needs.validate-secrets.outputs.token-valid == 'true'
     steps:
       - name: Wait for Previous Job
         run: sleep 30
@@ -89,13 +97,15 @@ jobs:
           tap: ${{ env.TAP }}
           tap_url: ${{ env.TAP_URL }}
           livecheck: true
+          no_fork: true
           force: true
 
   # Test livecheck functionality for entire tap
   test-livecheck-tap:
     name: Test Livecheck (Tap)
     runs-on: ubuntu-latest
-    needs: test-livecheck-formulas
+    needs: [ validate-secrets, test-livecheck-formulas ]
+    if: needs.validate-secrets.outputs.token-valid == 'true'
     steps:
       - name: Wait for Previous Job
         run: sleep 30
@@ -113,4 +123,5 @@ jobs:
           tap: ${{ env.TAP }}
           tap_url: ${{ env.TAP_URL }}
           livecheck: true
+          no_fork: true
           force: true
