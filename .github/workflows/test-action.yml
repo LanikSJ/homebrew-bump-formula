@@ -46,13 +46,13 @@ jobs:
     strategy:
       matrix:
         test:
-          - { formula: "test-formula-url", tag: "v1" }
+          - { formula: "test-formula-url", tag: "v7" }
           - {
               formula: "test-formula-git-revision",
-              tag: "v0.1.0",
-              revision: "98e6701337d2848541192f973d74851a22b272a1",
+              tag: "v0.8.3",
+              revision: "ecea0ce570d18808399ee16515e30a955707eaa8",
             }
-          - { formula: "test-formula-pypi-url", tag: "v1" }
+          - { formula: "test-formula-pypi-url", tag: "4.13.10" }
     runs-on: ubuntu-latest
     needs: validate-secrets
     if: needs.validate-secrets.outputs.token-valid == 'true'
