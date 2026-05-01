@@ -151,7 +151,11 @@ module Homebrew
       formula = formula.split(/[ ,\n]/).reject(&:blank?)
       formula = formula.map do |f|
         f_path = Pathname.new("#{Dir.pwd}/Formula/#{f}.rb")
-        f_path.exist? ? f_path.to_s : (tap.blank? ? f : "#{tap}/#{f}")
+        if f_path.exist?
+          f_path.to_s
+        else
+          (tap.blank? ? f : "#{tap}/#{f}")
+        end
       end
     end
 
