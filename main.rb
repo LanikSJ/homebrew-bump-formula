@@ -118,7 +118,12 @@ module Homebrew
   # Do the livecheck stuff or not
   if livecheck.false?
     # Change formula name to full name
-    formula = tap + "/" + formula if !tap.blank? && !formula.blank?
+    formula_path = Pathname.new("#{Dir.pwd}/Formula/#{formula}.rb")
+    if formula_path.exist?
+      formula = formula_path.to_s
+    elsif !tap.blank? && !formula.blank?
+      formula = tap + "/" + formula
+    end
 
     # Get info about formula
     stable = Formula[formula].stable
@@ -144,7 +149,10 @@ module Homebrew
     # Support multiple formulae in input and change to full names if tap
     unless formula.blank?
       formula = formula.split(/[ ,\n]/).reject(&:blank?)
-      formula = formula.map { |f| tap + "/" + f } unless tap.blank?
+      formula = formula.map do |f|
+        f_path = Pathname.new("#{Dir.pwd}/Formula/#{f}.rb")
+        f_path.exist? ? f_path.to_s : (tap.blank? ? f : "#{tap}/#{f}")
+      end
     end
 
     # Get livecheck info
