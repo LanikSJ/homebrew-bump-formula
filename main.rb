@@ -97,15 +97,16 @@ module Homebrew
 
   if tap.blank?
     brew "tap", "homebrew/core", "--force"
-  elsif !tap.blank?
     # Tap the requested tap if applicable
-    brew "tap", tap, *(tap_url unless tap_url.blank?)
-    # Copy local Formula directory to tap to ensure local changes are used
-    tap_path = Pathname.new("#{read_brew "--repository"}/Library/Taps/#{tap}")
-    if Dir.exist?("Formula") && tap_path.exist?
-      FileUtils.cp_r(Dir.glob("Formula/*.rb"), tap_path / "Formula")
+    if !tap.blank?
+      # If we are in the tap repository, tap the local directory to use local changes
+      if tap.casecmp?(ENV["GITHUB_REPOSITORY"])
+        ohai "Linking local repository as tap: #{tap}"
+        brew "tap", tap, Dir.pwd
+      else
+        brew "tap", tap, *(tap_url unless tap_url.blank?)
+      end
     end
-  end
 
   # Append additional PR message
   message = if message.blank?
