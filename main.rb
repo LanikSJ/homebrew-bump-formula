@@ -97,15 +97,13 @@ module Homebrew
 
   if tap.blank?
     brew "tap", "homebrew/core", "--force"
-  else
+  elsif tap.casecmp?(ENV["GITHUB_REPOSITORY"])
     # Tap the requested tap if applicable
     # If we are in the tap repository, tap the local directory to use local changes
-    if tap.casecmp?(ENV["GITHUB_REPOSITORY"])
-      ohai "Linking local repository as tap: #{tap}"
-      brew "tap", tap, Dir.pwd
-    else
-      brew "tap", tap, *(tap_url unless tap_url.blank?)
-    end
+    ohai "Linking local repository as tap: #{tap}"
+    brew "tap", tap, Dir.pwd
+  else
+    brew "tap", tap, *(tap_url unless tap_url.blank?)
   end
 
   # Append additional PR message
