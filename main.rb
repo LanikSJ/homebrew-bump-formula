@@ -141,6 +141,11 @@ module Homebrew
     version = Version.parse tag
 
     # Finally bump the formula
+    if !no_fork.false? && !force.false?
+      branch = "bump-#{formula.split("/").last.delete_suffix(".rb")}-#{tag}"
+      git "push", "origin", "--delete", branch rescue nil
+    end
+
     brew "bump-formula-pr",
       "--no-audit",
       "--no-browse",
@@ -184,6 +189,11 @@ module Homebrew
 
       begin
         # Finally bump the formula
+        if !no_fork.false? && !force.false?
+          branch = "bump-#{formula.split("/").last.delete_suffix(".rb")}-#{version}"
+          git "push", "origin", "--delete", branch rescue nil
+        end
+
         brew "bump-formula-pr",
           "--no-audit",
           "--no-browse",
