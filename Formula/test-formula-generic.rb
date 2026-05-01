@@ -1,4 +1,4 @@
-class TestFormulaPypiUrl < Formula
+class TestFormulaGeneric < Formula
   desc "Formula to test Action"
   homepage "https://github.com/AlDanial/cloc"
   url "https://github.com/AlDanial/cloc/archive/v1.0.tar.gz"
