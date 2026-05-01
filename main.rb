@@ -99,7 +99,14 @@ module Homebrew
     brew "tap", "homebrew/core", "--force"
   else
     # Tap the requested tap if applicable
-    brew "tap", tap, *(tap_url unless tap_url.blank?)
+    if !tap.blank?
+      brew "tap", tap, *(tap_url unless tap_url.blank?)
+      # Copy local Formula directory to tap to ensure local changes are used
+      tap_path = Pathname.new("#{read_brew "--repository"}/Library/Taps/#{tap}")
+      if Dir.exist?("Formula") && tap_path.exist?
+        FileUtils.cp_r(Dir.glob("Formula/*.rb"), tap_path/"Formula")
+      end
+    end
   end
 
   # Append additional PR message
@@ -118,12 +125,7 @@ module Homebrew
   # Do the livecheck stuff or not
   if livecheck.false?
     # Change formula name to full name
-    formula_path = Pathname.new("#{Dir.pwd}/Formula/#{formula}.rb")
-    if formula_path.exist?
-      formula = formula_path.to_s
-    elsif !tap.blank? && !formula.blank?
-      formula = tap + "/" + formula
-    end
+    formula = tap + "/" + formula if !tap.blank? && !formula.blank?
 
     # Get info about formula
     stable = Formula[formula].stable
@@ -149,10 +151,7 @@ module Homebrew
     # Support multiple formulae in input and change to full names if tap
     unless formula.blank?
       formula = formula.split(/[ ,\n]/).reject(&:blank?)
-      formula = formula.map do |f|
-        f_path = Pathname.new("#{Dir.pwd}/Formula/#{f}.rb")
-        f_path.exist? ? f_path.to_s : (tap.blank? ? f : "#{tap}/#{f}")
-      end
+      formula = formula.map { |f| tap + "/" + f } unless tap.blank?
     end
 
     # Get livecheck info
