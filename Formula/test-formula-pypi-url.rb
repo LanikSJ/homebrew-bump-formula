@@ -3,8 +3,8 @@ class TestFormulaPypiUrl < Formula
 
   desc "Formula to test Action"
   homepage "https://commitizen-tools.github.io/commitizen/"
-  url "https://files.pythonhosted.org/packages/a6/44/10f95e8178ab5a584298726a4a94ceb83a7f77e00741fec4680df05fedd5/commitizen-4.13.9.tar.gz"
-  sha256 "2b4567ed50555e10920e5bd804a6a4e2c42ec70bb74f14a83f2680fe9eaf9727"
+  url "https://files.pythonhosted.org/packages/source/c/commitizen/commitizen-1.0.0.tar.gz"
+  sha256 "1b4567ed50555e10920e5bd804a6a4e2c42ec70bb74f14a83f2680fe9eaf9727"
   license "MIT"
   head "https://github.com/commitizen-tools/commitizen.git"
 
