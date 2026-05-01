@@ -97,15 +97,13 @@ module Homebrew
 
   if tap.blank?
     brew "tap", "homebrew/core", "--force"
-  else
+  elsif !tap.blank?
     # Tap the requested tap if applicable
-    if !tap.blank?
-      brew "tap", tap, *(tap_url unless tap_url.blank?)
-      # Copy local Formula directory to tap to ensure local changes are used
-      tap_path = Pathname.new("#{read_brew "--repository"}/Library/Taps/#{tap}")
-      if Dir.exist?("Formula") && tap_path.exist?
-        FileUtils.cp_r(Dir.glob("Formula/*.rb"), tap_path/"Formula")
-      end
+    brew "tap", tap, *(tap_url unless tap_url.blank?)
+    # Copy local Formula directory to tap to ensure local changes are used
+    tap_path = Pathname.new("#{read_brew "--repository"}/Library/Taps/#{tap}")
+    if Dir.exist?("Formula") && tap_path.exist?
+      FileUtils.cp_r(Dir.glob("Formula/*.rb"), tap_path / "Formula")
     end
   end
 
