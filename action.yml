@@ -94,6 +94,11 @@ runs:
     - run: echo /home/linuxbrew/.linuxbrew/bin >> $GITHUB_PATH
       if: ${{runner.os == 'Linux'}}
       shell: sh
+    - run: |
+        if [ "$RUNNER_OS" = "Linux" ]; then
+          /home/linuxbrew/.linuxbrew/opt/python@3.9/libexec/bin/python -m pip install --upgrade pip
+        fi
+      shell: sh
     - run: brew developer on
       shell: sh
     - run: brew update-reset
