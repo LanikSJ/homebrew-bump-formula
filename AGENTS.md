@@ -1,4 +1,4 @@
-# AI Rules & Project Standards for homebrew-bump-formula
+# Agent Rules & Project Standards for homebrew-bump-formula
 
 ## Repository Overview
 
