@@ -1,8 +1,8 @@
 class TestFormulaGeneric < Formula
   desc "Formula to test Action"
   homepage "https://github.com/AlDanial/cloc"
-  url "https://github.com/AlDanial/cloc/archive/v1.0.tar.gz"
-  sha256 "1b4567ed50555e10920e5bd804a6a4e2c42ec70bb74f14a83f2680fe9eaf9727"
+  url "https://github.com/AlDanial/cloc/archive/v2.08.tar.gz"
+  sha256 "8099b6275c124f662690f2db3581cd2ad4e9ad4e08332288719838ded00d1da5"
   license "MIT"
 
   def install
