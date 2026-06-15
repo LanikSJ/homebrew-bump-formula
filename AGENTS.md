@@ -47,17 +47,18 @@ homebrew-bump-formula is a GitHub Action for automatically updating Homebrew for
 
 ## Development Guidelines
 
-### Commit Message Standards
+### Commit Message Convention
 
-This project follows **Angular style commit messages**. All commits must adhere to the following format:
+- Use the conventional commit format: `type(scope): description`
+- Common types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `ci`
+- Commit descriptions should be a bullet list of changes made
+- Example:
 
-```yaml
-<type>(<scope>): <description>
+  ```text
+  docs(AGENTS.md): update agent rules for cloudflare-worker project
 
-[optional body]
-
-[optional footer(s)]
-```
+  - this file had the wrong data from a totally different repository
+  ```
 
 #### Commit Types
 
