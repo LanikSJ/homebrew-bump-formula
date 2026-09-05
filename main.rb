@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "formula"
+require "utils"
 
 class Object
   def false?
@@ -23,13 +24,16 @@ module Homebrew
     puts "[command]#{cmd.join(" ").tr("\n", " ")}"
   end
 
+  def safe_system(*cmd)
+    print_command(*cmd)
+    raise "Command failed with exit status #{$CHILD_STATUS.exitstatus || 1}: #{cmd.join(" ")}" unless system(*cmd)
+  end
+
   def brew(*args)
-    print_command ENV["HOMEBREW_BREW_FILE"], *args
     safe_system ENV["HOMEBREW_BREW_FILE"], *args
   end
 
   def git(*args)
-    print_command ENV["HOMEBREW_GIT"], *args
     safe_system ENV["HOMEBREW_GIT"], *args
   end
 
