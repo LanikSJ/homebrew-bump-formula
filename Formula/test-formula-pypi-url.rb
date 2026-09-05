@@ -1,8 +1,8 @@
 class TestFormulaPypiUrl < Formula
   desc "Formula to test Action"
   homepage "https://github.com/AlDanial/cloc"
-  url "https://github.com/AlDanial/cloc/archive/v1.0.tar.gz"
-  sha256 "1b4567ed50555e10920e5bd804a6a4e2c42ec70bb74f14a83f2680fe9eaf9727"
+  url "https://github.com/AlDanial/cloc/archive/v1.94.tar.gz"
+  sha256 "c835fe343e1c25194a61eb74d7a36e98413682ed0c3b4d6b8e35a327077bf926"
   license "MIT"
 
   def install
