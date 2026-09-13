@@ -126,9 +126,14 @@ module Homebrew
   end
   message += "[`Homebrew Bump Formula`](https://github.com/LanikSJ/homebrew-bump-formula)"
 
-  unless force.false?
-    brew_repo = read_brew "--repository"
+  # The bump-formula-pr patch is required in all modes: it teaches
+  # bump-formula-pr how to bump formulae whose `url`/`sha256` stanzas live
+  # inside `on_macos`/`on_linux` blocks (not just in `force` mode).
+  brew_repo = read_brew "--repository"
+  begin
     git "-C", brew_repo, "apply", "#{__dir__}/bump-formula-pr.rb.patch"
+  rescue => e
+    opoo "Could not apply the bump-formula-pr patch: #{e.message}"
   end
 
   # Do the livecheck stuff or not
