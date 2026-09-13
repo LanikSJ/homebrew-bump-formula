@@ -105,6 +105,11 @@ module Homebrew
     # Tap the requested tap if applicable
     brew "tap", tap, *(tap_url unless tap_url.blank?)
 
+    # Trust the (non-official) tap so Homebrew can load its formulae, casks and
+    # commands. `HOMEBREW_NO_REQUIRE_TAP_TRUST` is deprecated in favour of
+    # `brew trust` and will be removed in a later release.
+    brew "trust", tap
+
     # Copy local Formula directory to tap to ensure local changes are used
     begin
       tap_info = JSON.parse(read_brew("tap-info", "--json", tap)).first
