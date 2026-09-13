@@ -1,5 +1,5 @@
 diff --git a/Library/Homebrew/dev-cmd/bump-formula-pr.rb b/Library/Homebrew/dev-cmd/bump-formula-pr.rb
-index 3261b6ebf7..708ee1455d 100644
+index 3261b6e..5aabd75 100644
 --- a/Library/Homebrew/dev-cmd/bump-formula-pr.rb
 +++ b/Library/Homebrew/dev-cmd/bump-formula-pr.rb
 @@ -268,6 +268,7 @@ module Homebrew
@@ -70,7 +70,7 @@ index 3261b6ebf7..708ee1455d 100644
  
          # if we haven't already found open requests, try for an exact match across all pull requests
          GitHub.check_for_duplicate_pull_requests(
-@@ -740,6 +756,129 @@ module Homebrew
+@@ -740,6 +756,131 @@ module Homebrew
          opoo "Failed to parse --resource-versions JSON: #{e.message}"
          nil
        end
@@ -92,7 +92,7 @@ index 3261b6ebf7..708ee1455d 100644
 +        ).returns(T::Boolean)
 +      }
 +      def bump_platform_formula!(formula_ast, formula, old_version, new_version)
-+        nodes = collect_ast_nodes(formula_ast.children)
++        nodes = collect_ast_nodes(formula_ast.ast_children)
 +
 +        urls   = nodes.select { |node| ast_method_call?(node, :url) }
 +        hashes = nodes.select { |node| ast_method_call?(node, :sha256) }
@@ -109,8 +109,10 @@ index 3261b6ebf7..708ee1455d 100644
 +          return false if new_url == old_url
 +
 +          resource_path, _ = fetch_resource_and_forced_version(formula, new_version, new_url)
-+          formula_ast.replace_stanza_value(url_node, new_url) unless version_updated
-+          formula_ast.replace_stanza_value(hashes[index], resource_path.sha256)
++          unless version_updated
++            formula_ast.ast_rewriter.replace(url_node.first_argument.source_range, new_url.inspect)
++          end
++          formula_ast.ast_rewriter.replace(hashes[index].first_argument.source_range, resource_path.sha256.inspect)
 +        end
 +
 +        true
@@ -146,7 +148,7 @@ index 3261b6ebf7..708ee1455d 100644
 +      sig { params(nodes: T::Array[Node], formula_ast: Utils::AST::FormulaAST, new_version: String).returns(T::Boolean) }
 +      def update_platform_version!(nodes, formula_ast, new_version)
 +        if (node = nodes.find { |candidate| candidate.respond_to?(:type) && candidate.type == :lvasgn && candidate.children.first == :version })
-+          formula_ast.tree_rewriter.replace(node.children[1].source_range, new_version.inspect)
++          formula_ast.ast_rewriter.replace(node.children[1].source_range, new_version.inspect)
 +          return true
 +        end
 +
@@ -200,3 +202,24 @@ index 3261b6ebf7..708ee1455d 100644
  
        # TODO: Add support for resource URLs with options and resources inside
        # `on_os` or `on_arch` blocks.
+diff --git a/Library/Homebrew/utils/ast.rb b/Library/Homebrew/utils/ast.rb
+index 4cc88fc..5d054c8 100644
+--- a/Library/Homebrew/utils/ast.rb
++++ b/Library/Homebrew/utils/ast.rb
+@@ -313,6 +313,16 @@ module Utils
+         tree_rewriter.insert_after(preceding_expr, "\n#{stanza_text(name, value, indent: 2)}")
+       end
+ 
++      # Public accessors for the formula's top-level AST nodes and rewriter. The
++      # underlying `children`/`tree_rewriter` readers are private, but external
++      # callers (e.g. `bump-formula-pr`) need them to rewrite urls/checksums that
++      # live inside `on_macos`/`on_linux` platform blocks.
++      sig { returns(T::Array[Node]) }
++      def ast_children = children
++
++      sig { returns(TreeRewriter) }
++      def ast_rewriter = tree_rewriter
++
+       private
+ 
+       sig { returns(String) }
