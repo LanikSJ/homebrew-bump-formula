@@ -7,6 +7,7 @@ on:
       - ".github/workflows/test-action.yml"
       - "action.yml"
       - "main.rb"
+      - "bump-formula-pr.rb.patch"
 
   workflow_dispatch:
 
@@ -36,6 +37,11 @@ jobs:
               revision: "ecea0ce570d18808399ee16515e30a955707eaa8",
             }
           - { formula: "test-formula-pypi-url", tag: "v1.94" }
+          # Regression test: formula whose `url`/`sha256` live only inside
+          # `on_macos`/`on_linux` blocks (no top-level `url` stanza). This is
+          # the case that previously failed with "Could not find 'url' stanza!"
+          # when bump-formula-pr.rb.patch stopped applying cleanly.
+          - { formula: "test-formula-platform", tag: "v7" }
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository

@@ -135,10 +135,30 @@ module Homebrew
   # bump-formula-pr how to bump formulae whose `url`/`sha256` stanzas live
   # inside `on_macos`/`on_linux` blocks (not just in `force` mode).
   brew_repo = read_brew "--repository"
+  patch_file = "#{__dir__}/bump-formula-pr.rb.patch"
   begin
-    git "-C", brew_repo, "apply", "#{__dir__}/bump-formula-pr.rb.patch"
+    git "-C", brew_repo, "apply", patch_file
   rescue => e
-    opoo "Could not apply the bump-formula-pr patch: #{e.message}"
+    opoo "Could not apply the bump-formula-pr patch with git apply: #{e.message}"
+    begin
+      # Retry with a 3-way merge so minor upstream drift (moved lines,
+      # reformatted hunks) does not silently disable the platform-url bump
+      # support and fail later with "Could not find 'url' stanza!".
+      ohai "Retrying patch application with git apply --3way"
+      git "-C", brew_repo, "apply", "--3way", patch_file
+    rescue => e3
+      opoo "Could not apply the bump-formula-pr patch with --3way either: #{e3.message}"
+      # `git apply --3way` can leave conflict markers behind; restore the
+      # pristine files so `bump-formula-pr` never runs against broken Ruby.
+      %w[
+        Library/Homebrew/dev-cmd/bump-formula-pr.rb
+        Library/Homebrew/utils/ast.rb
+      ].each do |path|
+        git "-C", brew_repo, "checkout", "--", path
+      rescue
+        nil
+      end
+    end
   end
 
   # Do the livecheck stuff or not

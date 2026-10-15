@@ -1,8 +1,8 @@
 diff --git a/Library/Homebrew/dev-cmd/bump-formula-pr.rb b/Library/Homebrew/dev-cmd/bump-formula-pr.rb
-index 3261b6e..5aabd75 100644
+index e679204aa2..98692920a4 100644
 --- a/Library/Homebrew/dev-cmd/bump-formula-pr.rb
 +++ b/Library/Homebrew/dev-cmd/bump-formula-pr.rb
-@@ -268,6 +268,7 @@ module Homebrew
+@@ -269,6 +269,7 @@ module Homebrew
  
            old_contents = commit_formula.path.read
            formula_ast = Utils::AST::FormulaAST.new(old_contents)
@@ -10,7 +10,7 @@ index 3261b6e..5aabd75 100644
  
            formula_ast.remove_stanza(:revision) if commit_formula.revision.nonzero?
            formula_ast.remove_stable_stanzas(:mirror) if commit_formula_spec.mirrors.present?
-@@ -275,8 +276,20 @@ module Homebrew
+@@ -276,8 +277,20 @@ module Homebrew
            if new_url_hash.present?
              odie "#{commit_formula}: no new URL found!" if new_url.nil?
  
@@ -33,7 +33,7 @@ index 3261b6e..5aabd75 100644
            else
              odie "#{commit_formula}: no new revision found!" if new_revision.nil?
  
-@@ -289,17 +302,19 @@ module Homebrew
+@@ -290,17 +303,19 @@ module Homebrew
            end
  
            stanzas_to_add = []
@@ -60,9 +60,9 @@ index 3261b6e..5aabd75 100644
            end
 -          formula_ast.add_stable_stanzas_after(:url, stanzas_to_add) if stanzas_to_add.present?
            new_contents = formula_ast.process
-           commit_formula.path.atomic_write(new_contents) unless args.dry_run?
  
-@@ -681,6 +696,7 @@ module Homebrew
+           new_formula_version = formula_version(commit_formula, new_contents)
+@@ -788,6 +803,7 @@ module Homebrew
        def check_pull_requests(formula, tap_remote_repo, state: nil, version: nil)
          tap = formula.tap
          return if tap.nil?
@@ -70,11 +70,11 @@ index 3261b6e..5aabd75 100644
  
          # if we haven't already found open requests, try for an exact match across all pull requests
          GitHub.check_for_duplicate_pull_requests(
-@@ -740,6 +756,131 @@ module Homebrew
+@@ -847,6 +863,131 @@ module Homebrew
          opoo "Failed to parse --resource-versions JSON: #{e.message}"
          nil
        end
-+# Rewrites every platform `url`/`sha256` stanza (typically declared inside
++      # Rewrites every platform `url`/`sha256` stanza (typically declared inside
 +      # `on_macos`/`on_linux`/`on_arm`/`on_intel` blocks) for the new version.
 +      #
 +      # Homebrew's stable bump path can't do this yet (see the TODO in
@@ -203,10 +203,10 @@ index 3261b6e..5aabd75 100644
        # TODO: Add support for resource URLs with options and resources inside
        # `on_os` or `on_arch` blocks.
 diff --git a/Library/Homebrew/utils/ast.rb b/Library/Homebrew/utils/ast.rb
-index 4cc88fc..5d054c8 100644
+index 5e4dd2e920..8ab124904c 100644
 --- a/Library/Homebrew/utils/ast.rb
 +++ b/Library/Homebrew/utils/ast.rb
-@@ -313,6 +313,16 @@ module Utils
+@@ -358,6 +358,16 @@ module Utils
          tree_rewriter.insert_after(preceding_expr, "\n#{stanza_text(name, value, indent: 2)}")
        end
  
