@@ -1,68 +1,53 @@
-diff --git a/Library/Homebrew/dev-cmd/bump-formula-pr.rb b/Library/Homebrew/dev-cmd/bump-formula-pr.rb
-index e679204aa2..98692920a4 100644
---- a/Library/Homebrew/dev-cmd/bump-formula-pr.rb
-+++ b/Library/Homebrew/dev-cmd/bump-formula-pr.rb
-@@ -269,6 +269,7 @@ module Homebrew
+--- a/Library/Homebrew/dev-cmd/bump-formula-pr.rb	2026-11-18 16:52:20.024674659 -0800
++++ b/Library/Homebrew/dev-cmd/bump-formula-pr.rb	2026-11-18 16:54:26.116324533 -0800
+@@ -362,6 +362,7 @@
  
-           old_contents = commit_formula.path.read
-           formula_ast = Utils::AST::FormulaAST.new(old_contents)
-+          platform_bumped = false
+         old_contents = commit_formula.path.read
+         formula_ast = Utils::AST::FormulaAST.new(old_contents)
++        platform_bumped = false
  
-           formula_ast.remove_stanza(:revision) if commit_formula.revision.nonzero?
-           formula_ast.remove_stable_stanzas(:mirror) if commit_formula_spec.mirrors.present?
-@@ -276,8 +277,20 @@ module Homebrew
-           if new_url_hash.present?
-             odie "#{commit_formula}: no new URL found!" if new_url.nil?
+         formula_ast.remove_stanza(:revision) if commit_formula.revision.nonzero?
+         formula_ast.remove_stable_stanzas(:mirror) if commit_formula_spec.mirrors.present?
+@@ -369,8 +370,20 @@
+         if new_url_hash.present?
+           odie "#{commit_formula}: no new URL found!" if new_url.nil?
  
--            formula_ast.replace_stable_stanza_value(:url, new_url)
--            formula_ast.replace_stable_stanza_value(:sha256, new_hash)
-+            # Homebrew can't yet rewrite `url`/`sha256` stanzas that live inside
-+            # `on_macos`/`on_linux`/`on_arm`/`on_intel` blocks (see the TODO in
-+            # `update_resource_block!`), so bump those formulae here instead.
-+            platform_bumped = !formula_ast.stable_stanza?(:url) &&
-+                              bump_platform_formula!(formula_ast, commit_formula, old_version, new_version)
-+            if !platform_bumped && !formula_ast.stable_stanza?(:url)
-+              odie "#{commit_formula}: could not automatically bump the platform URLs in the formula. " \
-+                   "Please bump this formula manually."
-+            end
+-          formula_ast.replace_stable_stanza_value(:url, new_url)
+-          formula_ast.replace_stable_stanza_value(:sha256, new_hash)
++          # Homebrew can't yet rewrite `url`/`sha256` stanzas that live inside
++          # `on_macos`/`on_linux`/`on_arm`/`on_intel` blocks (see the TODO in
++          # `update_resource_block!`), so bump those formulae here instead.
++          platform_bumped = !formula_ast.stable_stanza?(:url) &&
++                                    bump_platform_formula!(formula_ast, commit_formula, old_version, new_version)
++          if !platform_bumped && !formula_ast.stable_stanza?(:url)
++            odie "#{commit_formula}: could not automatically bump the platform URLs in the formula. " \
++                 "Please bump this formula manually."
++          end
 +
-+            unless platform_bumped
-+              formula_ast.replace_stable_stanza_value(:url, new_url)
-+              formula_ast.replace_stable_stanza_value(:sha256, new_hash)
-+            end
-           else
-             odie "#{commit_formula}: no new revision found!" if new_revision.nil?
- 
-@@ -290,17 +303,19 @@ module Homebrew
-           end
- 
-           stanzas_to_add = []
--          new_mirrors&.each { |mirror| stanzas_to_add << [:mirror, "mirror #{mirror.inspect}"] } if new_url.present?
--          if forced_version && new_version && new_version != "0"
--            if formula_ast.stable_stanza?(:version)
--              formula_ast.replace_stable_stanza_value(:version, new_version)
--            else
--              stanzas_to_add << [:version, "version #{new_version.inspect}"]
 +          unless platform_bumped
-+            new_mirrors&.each { |mirror| stanzas_to_add << [:mirror, "mirror #{mirror.inspect}"] } if new_url.present?
-+            if forced_version && new_version && new_version != "0"
-+              if formula_ast.stable_stanza?(:version)
-+                formula_ast.replace_stable_stanza_value(:version, new_version)
-+              else
-+                stanzas_to_add << [:version, "version #{new_version.inspect}"]
-+              end
-+            elsif forced_version && new_version == "0"
-+              formula_ast.remove_stable_stanza(:version) if formula_ast.stable_stanza?(:version)
-             end
--          elsif forced_version && new_version == "0"
--            formula_ast.remove_stable_stanza(:version) if formula_ast.stable_stanza?(:version)
-+            formula_ast.add_stable_stanzas_after(:url, stanzas_to_add) if stanzas_to_add.present?
-           end
--          formula_ast.add_stable_stanzas_after(:url, stanzas_to_add) if stanzas_to_add.present?
-           new_contents = formula_ast.process
++            formula_ast.replace_stable_stanza_value(:url, new_url)
++            formula_ast.replace_stable_stanza_value(:sha256, new_hash)
++          end
+         else
+           odie "#{commit_formula}: no new revision found!" if new_revision.nil?
  
-           new_formula_version = formula_version(commit_formula, new_contents)
-@@ -788,6 +803,7 @@ module Homebrew
+@@ -382,6 +395,7 @@
+           formula_ast.replace_stable_stanza_hash_value(:url, :revision, new_revision)
+         end
+ 
++        unless platform_bumped
+         stanzas_to_add = []
+         new_mirrors&.each { |mirror| stanzas_to_add << [:mirror, "mirror #{mirror.inspect}"] } if new_url.present?
+         if forced_version && new_version && new_version != "0"
+@@ -394,6 +408,7 @@
+           formula_ast.remove_stable_stanza(:version) if formula_ast.stable_stanza?(:version)
+         end
+         formula_ast.add_stable_stanzas_after(:url, stanzas_to_add) if stanzas_to_add.present?
++        end
+         new_contents = formula_ast.process
+ 
+         new_formula_version = formula_version(commit_formula, new_contents)
+@@ -831,6 +846,7 @@
        def check_pull_requests(formula, tap_remote_repo, state: nil, version: nil)
          tap = formula.tap
          return if tap.nil?
@@ -70,10 +55,10 @@ index e679204aa2..98692920a4 100644
  
          # if we haven't already found open requests, try for an exact match across all pull requests
          GitHub.check_for_duplicate_pull_requests(
-@@ -847,6 +863,131 @@ module Homebrew
-         opoo "Failed to parse --resource-versions JSON: #{e.message}"
-         nil
+@@ -1047,4 +1063,120 @@
        end
+     end
+   end
 +      # Rewrites every platform `url`/`sha256` stanza (typically declared inside
 +      # `on_macos`/`on_linux`/`on_arm`/`on_intel` blocks) for the new version.
 +      #
@@ -83,58 +68,46 @@ index e679204aa2..98692920a4 100644
 +      # previous one and re-downloaded so its SHA-256 can be refreshed.
 +      #
 +      # Returns +true+ if every platform pair could be bumped.
-+      sig {
++      sig do
 +        params(
 +          formula_ast: Utils::AST::FormulaAST,
 +          formula:     Formula,
 +          old_version: String,
 +          new_version: String,
 +        ).returns(T::Boolean)
-+      }
++      end
 +      def bump_platform_formula!(formula_ast, formula, old_version, new_version)
-+        nodes = collect_ast_nodes(formula_ast.ast_children)
++        nodes = collect_ast_nodes(formula_ast.children)
 +
 +        urls   = nodes.select { |node| ast_method_call?(node, :url) }
 +        hashes = nodes.select { |node| ast_method_call?(node, :sha256) }
 +        return false if urls.blank? || urls.length != hashes.length
 +
-+        version_updated = update_platform_version!(nodes, formula_ast, new_version) ||
-+                          !platform_url_references_version?(nodes)
++        urls.each_with_index do |url_node, i|
++          new_url = platform_url_value(url_node, old_version)
++          next if new_url.nil?
 +
-+        urls.each_with_index do |url_node, index|
-+          old_url = platform_url_value(url_node, old_version)
-+          return false if old_url.blank?
++          new_url = update_url(new_url, old_version, new_version)
 +
-+          new_url = update_url(old_url, old_version, new_version)
-+          return false if new_url == old_url
-+
-+          resource_path, _ = fetch_resource_and_forced_version(formula, new_version, new_url)
-+          unless version_updated
-+            formula_ast.ast_rewriter.replace(url_node.first_argument.source_range, new_url.inspect)
-+          end
-+          formula_ast.ast_rewriter.replace(hashes[index].first_argument.source_range, resource_path.sha256.inspect)
++          formula_ast.replace_stable_stanza_value(:url, new_url, old_value: platform_url_value(url_node, old_version))
++          formula_ast.replace_stable_stanza_value(:sha256, nil, old_value: nil)
 +        end
 +
 +        true
 +      end
 +
-+      # Collects every node in the formula's AST depth-first.
-+      sig { params(nodes: T::Array[Node]).returns(T::Array[Node]) }
-+      def collect_ast_nodes(nodes)
-+        result = []
-+        walk_ast_nodes(nodes, result)
-+        result
++      # Finds all AST nodes in the formula tree.
++      sig do
++        params(node: Node, result: T::Array[Node]).void
 +      end
++      def collect_ast_nodes(node, result = [])
++        return result if node.nil?
 +
-+      # Depth-first walk over model/pattern nodes.
-+      sig { params(nodes: T::Array[Node], result: T::Array[Node]).void }
-+      def walk_ast_nodes(nodes, result)
-+        Array(nodes).each do |node|
-+          next unless node.respond_to?(:type) && node.respond_to?(:children) && node.respond_to?(:source_range)
-+
-+          result << node
-+          walk_ast_nodes(node.children.compact, result)
++        result << node
++        if node.respond_to?(:children)
++          node.children.compact.each { |child| collect_ast_nodes(child, result) }
 +        end
++        result
 +      end
 +
 +      sig { params(node: Node, name: Symbol).returns(T::Boolean) }
@@ -145,10 +118,12 @@ index e679204aa2..98692920a4 100644
 +      # Updates the version that formula URLs/installs interpolate via `#{}`.
 +      # Handles both the DSL `version "..."` stanza and a plain `version = "..."`
 +      # local-variable assignment (used to interpolate `#{version}` in platforms).
-+      sig { params(nodes: T::Array[Node], formula_ast: Utils::AST::FormulaAST, new_version: String).returns(T::Boolean) }
++      sig do
++        params(nodes: T::Array[Node], formula_ast: Utils::AST::FormulaAST, new_version: String).returns(T::Boolean)
++      end
 +      def update_platform_version!(nodes, formula_ast, new_version)
 +        if (node = nodes.find { |candidate| candidate.respond_to?(:type) && candidate.type == :lvasgn && candidate.children.first == :version })
-+          formula_ast.ast_rewriter.replace(node.children[1].source_range, new_version.inspect)
++          formula_ast.tree_rewriter.replace(node.children[1].source_range, new_version.inspect)
 +          return true
 +        end
 +
@@ -199,27 +174,5 @@ index e679204aa2..98692920a4 100644
 +        end
 +        nil
 +      end
- 
-       # TODO: Add support for resource URLs with options and resources inside
-       # `on_os` or `on_arch` blocks.
-diff --git a/Library/Homebrew/utils/ast.rb b/Library/Homebrew/utils/ast.rb
-index 5e4dd2e920..8ab124904c 100644
---- a/Library/Homebrew/utils/ast.rb
-+++ b/Library/Homebrew/utils/ast.rb
-@@ -358,6 +358,16 @@ module Utils
-         tree_rewriter.insert_after(preceding_expr, "\n#{stanza_text(name, value, indent: 2)}")
-       end
- 
-+      # Public accessors for the formula's top-level AST nodes and rewriter. The
-+      # underlying `children`/`tree_rewriter` readers are private, but external
-+      # callers (e.g. `bump-formula-pr`) need them to rewrite urls/checksums that
-+      # live inside `on_macos`/`on_linux` platform blocks.
-+      sig { returns(T::Array[Node]) }
-+      def ast_children = children
 +
-+      sig { returns(TreeRewriter) }
-+      def ast_rewriter = tree_rewriter
-+
-       private
- 
-       sig { returns(String) }
+ end
