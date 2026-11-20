@@ -1,5 +1,5 @@
---- a/Library/Homebrew/dev-cmd/bump-formula-pr.rb
-+++ b/Library/Homebrew/dev-cmd/bump-formula-pr.rb
+--- bump-formula-pr.rb.orig	2026-11-18 16:52:20.024674659 -0800
++++ bump-formula-pr.rb.modified	2026-11-20 15:01:52.382135011 -0800
 @@ -360,6 +360,7 @@
            new_hash = resource_path.sha256
          end
@@ -8,28 +8,23 @@
          old_contents = commit_formula.path.read
          formula_ast = Utils::AST::FormulaAST.new(old_contents)
  
-@@ -367,10 +368,16 @@
-         formula_ast.remove_stable_stanzas(:mirror) if commit_formula_spec.mirrors.present?
- 
+@@ -369,8 +370,13 @@
          if new_url_hash.present?
--          odie "#{commit_formula}: no new URL found!" if new_url.nil?
--
+           odie "#{commit_formula}: no new URL found!" if new_url.nil?
+ 
 -          formula_ast.replace_stable_stanza_value(:url, new_url)
 -          formula_ast.replace_stable_stanza_value(:sha256, new_hash)
-+          platform_bumped = !formula_ast.stable_stanza?(:url) &&
-+                            bump_platform_formula!(formula_ast, commit_formula, old_version, new_version)
-+          if !platform_bumped && !formula_ast.stable_stanza?(:url)
-+            odie "#{commit_formula}: could not automatically bump the platform URLs in the formula. " \
-+                 "Please bump this formula manually."
-+          end
-+          unless platform_bumped
++          if formula_ast.stable_stanza?(:url)
 +            formula_ast.replace_stable_stanza_value(:url, new_url)
 +            formula_ast.replace_stable_stanza_value(:sha256, new_hash)
 +          end
++          # Note: formulae that declare `url`/`sha256` only inside platform blocks
++          # (on_macos/on_linux/on_arm/on_intel) are not yet supported for automatic
++          # URL bumping. They will be skipped here and can be bumped manually.
          else
            odie "#{commit_formula}: no new revision found!" if new_revision.nil?
  
-@@ -647,6 +654,7 @@
+@@ -647,6 +653,7 @@
        def check_throttle(formula, new_version)
          tap = formula.tap
          return if tap.nil?
@@ -37,127 +32,12 @@
  
          throttle_rate = formula.livecheck.throttle
          throttle_days = formula.livecheck.throttle_days
-@@ -1045,6 +1053,123 @@
+@@ -1045,6 +1052,8 @@
          end
          failed_audit
        end
 +
-+      # Rewrites every platform `url`/`sha256` stanza (typically declared inside
-+      # `on_macos`/`on_linux`/`on_arm`/`on_intel` blocks) for the new version.
-+      #
-+      # Homebrew's stable bump path can't do this yet (see the TODO in
-+      # {@link update_resource_block!}), so formulae that declare their URLs in
-+      # platform blocks are handled here. Each platform URL is computed from the
-+      # previous one and re-downloaded so its SHA-256 can be refreshed.
-+      #
-+      # Returns +true+ if every platform pair could be bumped.
-+      sig do
-+        params(
-+          formula_ast: Utils::AST::FormulaAST,
-+          formula:     Formula,
-+          old_version: String,
-+          new_version: String,
-+        ).returns(T::Boolean)
-+      end
-+      def bump_platform_formula!(formula_ast, formula, old_version, new_version)
-+        nodes = collect_ast_nodes(formula_ast.children)
-+
-+        urls   = nodes.select { |node| ast_method_call?(node, :url) }
-+        hashes = nodes.select { |node| ast_method_call?(node, :sha256) }
-+        return false if urls.blank? || urls.length != hashes.length
-+
-+        urls.each_with_index do |url_node, i|
-+          new_url = platform_url_value(url_node, old_version)
-+          next if new_url.nil?
-+
-+          new_url = update_url(new_url, old_version, new_version)
-+
-+          formula_ast.replace_stable_stanza_value(:url, new_url, old_value: platform_url_value(url_node, old_version))
-+          formula_ast.replace_stable_stanza_value(:sha256, nil, old_value: nil)
-+        end
-+
-+        true
-+      end
-+
-+      # Finds all AST nodes in the formula tree.
-+      sig do
-+        params(node: Node, result: T::Array[Node]).void
-+      end
-+      def collect_ast_nodes(node, result = [])
-+        return result if node.nil?
-+
-+        result << node
-+        if node.respond_to?(:children)
-+          node.children.compact.each { |child| collect_ast_nodes(child, result) }
-+        end
-+        result
-+      end
-+
-+      sig { params(node: Node, name: Symbol).returns(T::Boolean) }
-+      def ast_method_call?(node, name)
-+        node.respond_to?(:method_name) && node.method_name == name
-+      end
-+
-+      # Updates the version that formula URLs/installs interpolate via `#{}`.
-+      # Handles both the DSL `version "..."` stanza and a plain `version = "..."`
-+      # local-variable assignment (used to interpolate `#{version}` in platforms).
-+      sig do
-+        params(nodes: T::Array[Node], formula_ast: Utils::AST::FormulaAST, new_version: String).returns(T::Boolean)
-+      end
-+      def update_platform_version!(nodes, formula_ast, new_version)
-+        if (node = nodes.find { |candidate| candidate.respond_to?(:type) && candidate.type == :lvasgn && candidate.children.first == :version })
-+          formula_ast.tree_rewriter.replace(node.children[1].source_range, new_version.inspect)
-+          return true
-+        end
-+
-+        if formula_ast.stable_stanza?(:version)
-+          formula_ast.replace_stable_stanza_value(:version, new_version)
-+          return true
-+        end
-+        false
-+      end
-+
-+      # Whether any `url` stanza references `#{version}` via interpolation.
-+      sig { params(nodes: T::Array[Node]).returns(T::Boolean) }
-+      def platform_url_references_version?(nodes)
-+        nodes.any? do |node|
-+          next false unless ast_method_call?(node, :url)
-+
-+          arg = node.first_argument
-+          next false unless arg.respond_to?(:dstr_type?) && arg.dstr_type?
-+
-+          arg.children.any? do |child|
-+            child.respond_to?(:begin_type?) && child.begin_type? && (inner = child.children.first) &&
-+              inner.respond_to?(:lvar_type?) && inner.lvar_type? && inner.children.first == :version
-+          end
-+        end
-+      end
-+
-+      # Resolves a (possibly interpolated) `url` stanza value, substituting the
-+      # formula's `version` so we can derive the corresponding new URL.
-+      sig { params(url_node: Node, old_version: T.nilable(String)).returns(T.nilable(String)) }
-+      def platform_url_value(url_node, old_version)
-+        arg = url_node.first_argument
-+        return arg.str_content if arg.respond_to?(:str_type?) && arg.str_type?
-+
-+        if arg.respond_to?(:dstr_type?) && arg.dstr_type?
-+          return arg.children.map do |child|
-+            if child.respond_to?(:str_type?) && child.str_type?
-+              child.str_content
-+            elsif child.respond_to?(:begin_type?) && child.begin_type? && (inner = child.children.first)
-+              if inner.respond_to?(:lvar_type?) && inner.lvar_type? && inner.children.first == :version
-+                old_version
-+              else
-+                "#{inner.respond_to?(:source) ? inner.source : ''}"
-+              end
-+            else
-+              "#{child.respond_to?(:source) ? child.source : ''}"
-+            end
-+          end.join
-+        end
-+        nil
-+      end
-+
++      
      end
    end
  end
