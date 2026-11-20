@@ -1,29 +1,27 @@
---- a/Library/Homebrew/dev-cmd/bump-formula-pr.rb	2026-11-18 16:52:20.024674659 -0800
-+++ b/Library/Homebrew/dev-cmd/bump-formula-pr.rb	2026-11-18 16:54:26.116324533 -0800
-@@ -362,6 +362,7 @@
+--- a/Library/Homebrew/dev-cmd/bump-formula-pr.rb
++++ b/Library/Homebrew/dev-cmd/bump-formula-pr.rb
+@@ -360,6 +360,7 @@
+           new_hash = resource_path.sha256
+         end
  
++        platform_bumped = false
          old_contents = commit_formula.path.read
          formula_ast = Utils::AST::FormulaAST.new(old_contents)
-+        platform_bumped = false
  
-         formula_ast.remove_stanza(:revision) if commit_formula.revision.nonzero?
+@@ -367,10 +368,16 @@
          formula_ast.remove_stable_stanzas(:mirror) if commit_formula_spec.mirrors.present?
-@@ -369,8 +370,20 @@
-         if new_url_hash.present?
-           odie "#{commit_formula}: no new URL found!" if new_url.nil?
  
+         if new_url_hash.present?
+-          odie "#{commit_formula}: no new URL found!" if new_url.nil?
+-
 -          formula_ast.replace_stable_stanza_value(:url, new_url)
 -          formula_ast.replace_stable_stanza_value(:sha256, new_hash)
-+          # Homebrew can't yet rewrite `url`/`sha256` stanzas that live inside
-+          # `on_macos`/`on_linux`/`on_arm`/`on_intel` blocks (see the TODO in
-+          # `update_resource_block!`), so bump those formulae here instead.
 +          platform_bumped = !formula_ast.stable_stanza?(:url) &&
-+                                    bump_platform_formula!(formula_ast, commit_formula, old_version, new_version)
++                            bump_platform_formula!(formula_ast, commit_formula, old_version, new_version)
 +          if !platform_bumped && !formula_ast.stable_stanza?(:url)
 +            odie "#{commit_formula}: could not automatically bump the platform URLs in the formula. " \
 +                 "Please bump this formula manually."
 +          end
-+
 +          unless platform_bumped
 +            formula_ast.replace_stable_stanza_value(:url, new_url)
 +            formula_ast.replace_stable_stanza_value(:sha256, new_hash)
@@ -31,34 +29,19 @@
          else
            odie "#{commit_formula}: no new revision found!" if new_revision.nil?
  
-@@ -382,6 +395,7 @@
-           formula_ast.replace_stable_stanza_hash_value(:url, :revision, new_revision)
-         end
- 
-+        unless platform_bumped
-         stanzas_to_add = []
-         new_mirrors&.each { |mirror| stanzas_to_add << [:mirror, "mirror #{mirror.inspect}"] } if new_url.present?
-         if forced_version && new_version && new_version != "0"
-@@ -394,6 +408,7 @@
-           formula_ast.remove_stable_stanza(:version) if formula_ast.stable_stanza?(:version)
-         end
-         formula_ast.add_stable_stanzas_after(:url, stanzas_to_add) if stanzas_to_add.present?
-+        end
-         new_contents = formula_ast.process
- 
-         new_formula_version = formula_version(commit_formula, new_contents)
-@@ -831,6 +846,7 @@
-       def check_pull_requests(formula, tap_remote_repo, state: nil, version: nil)
+@@ -647,6 +654,7 @@
+       def check_throttle(formula, new_version)
          tap = formula.tap
          return if tap.nil?
 +        return if args.force?
  
-         # if we haven't already found open requests, try for an exact match across all pull requests
-         GitHub.check_for_duplicate_pull_requests(
-@@ -1047,4 +1063,120 @@
+         throttle_rate = formula.livecheck.throttle
+         throttle_days = formula.livecheck.throttle_days
+@@ -1045,6 +1053,123 @@
+         end
+         failed_audit
        end
-     end
-   end
++
 +      # Rewrites every platform `url`/`sha256` stanza (typically declared inside
 +      # `on_macos`/`on_linux`/`on_arm`/`on_intel` blocks) for the new version.
 +      #
@@ -175,4 +158,6 @@
 +        nil
 +      end
 +
+     end
+   end
  end
