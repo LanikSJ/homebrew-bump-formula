@@ -3,15 +3,15 @@
 @@ -360,6 +360,7 @@
            new_hash = resource_path.sha256
          end
- 
+
 +        platform_bumped = false
          old_contents = commit_formula.path.read
          formula_ast = Utils::AST::FormulaAST.new(old_contents)
- 
+
 @@ -369,8 +370,13 @@
          if new_url_hash.present?
            odie "#{commit_formula}: no new URL found!" if new_url.nil?
- 
+
 -          formula_ast.replace_stable_stanza_value(:url, new_url)
 -          formula_ast.replace_stable_stanza_value(:sha256, new_hash)
 +          if formula_ast.stable_stanza?(:url)
@@ -23,13 +23,13 @@
 +          # URL bumping. They will be skipped here and can be bumped manually.
          else
            odie "#{commit_formula}: no new revision found!" if new_revision.nil?
- 
+
 @@ -647,6 +653,7 @@
        def check_throttle(formula, new_version)
          tap = formula.tap
          return if tap.nil?
 +        return if args.force?
- 
+
          throttle_rate = formula.livecheck.throttle
          throttle_days = formula.livecheck.throttle_days
 @@ -1045,6 +1052,8 @@
@@ -37,7 +37,7 @@
          failed_audit
        end
 +
-+      
++
      end
    end
  end
